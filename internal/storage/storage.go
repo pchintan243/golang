@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/pchintan243/golang/internal/types"
 )
 
@@ -9,4 +11,5 @@ type Storage interface {
 	GetStudentById(id int64) (types.Student, error)
 	GetStudents() ([]types.Student, error)
 	DeleteStudentById(id int64) (string, error)
+	UpdateStudent(ctx context.Context, id int64, name string, email string, age int) (types.Student, error)
 }

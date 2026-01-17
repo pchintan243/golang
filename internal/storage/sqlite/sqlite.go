@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -136,4 +137,38 @@ func (s *Sqlite) DeleteStudentById(id int64) (string, error) {
 	}
 
 	return "delete successfully", nil
+}
+
+func (s *Sqlite) UpdateStudent(ctx context.Context, id int64, name string, email string, age int) (types.Student, error) {
+	stmt, err := s.Db.PrepareContext(ctx, "UPDATE students SET name = ?, email = ?, age = ? WHERE id = ?")
+
+	if err != nil {
+		return types.Student{}, err
+	}
+
+	// When use prepare must need to close it
+	defer stmt.Close()
+
+	// short hand prop
+	// No defer needed! Go handles the statement lifecycle automatically.
+	// result, err := s.Db.Exec("UPDATE students SET name = ? WHERE id = ?", name, id)
+
+	result, err := stmt.ExecContext(ctx, name, email, age, id)
+
+	if err != nil {
+		return types.Student{}, err
+	}
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		return types.Student{}, fmt.Errorf("no student found with id %d", id)
+	}
+
+	return types.Student{
+		Id:    id,
+		Name:  name,
+		Email: email,
+		Age:   age,
+	}, nil
+
 }

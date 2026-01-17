@@ -108,3 +108,35 @@ func DeleteById(storage storage.Storage) http.HandlerFunc {
 		response.WriteJson(w, http.StatusOK, map[string]string{"status": "success", "message": msg})
 	}
 }
+
+func Update(storage storage.Storage, v *validator.Validate) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var input types.UpdateStudentRequest
+
+		// Use the request context for DB operations
+		ctx := r.Context()
+
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
+
+		// Validating a request
+		if err := v.Struct(input); err != nil {
+			validateErrs := err.(validator.ValidationErrors)
+			response.WriteJson(w, http.StatusBadRequest, response.ValidationError(validateErrs))
+			return
+		}
+
+		studentData, err := storage.UpdateStudent(ctx, input.Id, input.Name, input.Email, input.Age)
+
+		if err != nil {
+			slog.Error("Error occurred: ", slog.String("Error", err.Error()))
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			return
+		}
+		slog.Info("user update successfully", slog.String("userId", fmt.Sprint(studentData)))
+
+		response.WriteJson(w, http.StatusOK, studentData)
+	}
+}

@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	config "github.com/pchintan243/golang/internal"
 	"github.com/pchintan243/golang/internal/http/handlers/student"
 	"github.com/pchintan243/golang/internal/storage/sqlite"
@@ -31,11 +32,13 @@ func main() {
 
 	// setup router
 	router := http.NewServeMux()
+	v := validator.New()
 
 	router.HandleFunc("POST /api/students", student.New(storage))
 	router.HandleFunc("GET /api/students/{id}", student.GetById(storage))
 	router.HandleFunc("GET /api/students", student.GetList(storage))
 	router.HandleFunc("DELETE /api/students/{id}", student.DeleteById(storage))
+	router.HandleFunc("PUT /api/students", student.Update(storage, v))
 
 	// setup server
 	server := http.Server{
