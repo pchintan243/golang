@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	config "github.com/pchintan243/golang/internal"
+	"github.com/pchintan243/golang/internal/config"
 	"github.com/pchintan243/golang/internal/http/handlers/student"
 	"github.com/pchintan243/golang/internal/storage/sqlite"
 )
@@ -22,7 +22,6 @@ func main() {
 	cfg := config.MustLoad()
 
 	// database setup
-
 	storage, err := sqlite.New(cfg)
 	if err != nil {
 		log.Fatal(err)

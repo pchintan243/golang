@@ -7,9 +7,9 @@ import (
 )
 
 type Storage interface {
-	CreateStudent(name string, email string, age int) (int64, error)
-	GetStudentById(id int64) (types.Student, error)
-	GetStudents() ([]types.Student, error)
-	DeleteStudentById(id int64) (string, error)
+	CreateStudent(ctx context.Context, name string, email string, age int) (int64, error)
+	GetStudentById(ctx context.Context, id int64) (types.Student, error)
+	GetStudents(ctx context.Context) ([]types.Student, error)
+	DeleteStudentById(ctx context.Context, id int64) (string, error)
 	UpdateStudent(ctx context.Context, id int64, name string, email string, age int) (types.Student, error)
 }

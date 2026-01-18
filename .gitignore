@@ -2,3 +2,5 @@
 /pkg
 /storage
 /config
+.air*
+tmp

@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 
 	_ "github.com/mattn/go-sqlite3"
-	config "github.com/pchintan243/golang/internal"
+	"github.com/pchintan243/golang/internal/config"
 	"github.com/pchintan243/golang/internal/types"
 )
 
@@ -36,7 +37,7 @@ func New(cfg *config.Config) (*Sqlite, error) {
 	}, err
 }
 
-func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error) {
+func (s *Sqlite) CreateStudent(ctx context.Context, name string, email string, age int) (int64, error) {
 	stmt, err := s.Db.Prepare("INSERT INTO students (name, email, age) VALUES (?, ?, ?)")
 
 	if err != nil {
@@ -45,7 +46,7 @@ func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error
 
 	defer stmt.Close()
 
-	result, err := stmt.Exec(name, email, age)
+	result, err := stmt.Exec(ctx, name, email, age)
 
 	if err != nil {
 		return 0, err
@@ -59,7 +60,7 @@ func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error
 	return lastId, nil
 }
 
-func (s *Sqlite) GetStudentById(id int64) (types.Student, error) {
+func (s *Sqlite) GetStudentById(ctx context.Context, id int64) (types.Student, error) {
 	stmt, err := s.Db.Prepare("SELECT * FROM students WHERE id = ? LIMIT 1")
 	if err != nil {
 		return types.Student{}, err
@@ -69,7 +70,7 @@ func (s *Sqlite) GetStudentById(id int64) (types.Student, error) {
 
 	var student types.Student
 
-	err = stmt.QueryRow(id).Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+	err = stmt.QueryRowContext(ctx, id).Scan(&student.Id, &student.Name, &student.Email, &student.Age)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return types.Student{}, fmt.Errorf("no student found with id %s", fmt.Sprint(id))
@@ -79,16 +80,17 @@ func (s *Sqlite) GetStudentById(id int64) (types.Student, error) {
 	return student, nil
 }
 
-func (s *Sqlite) GetStudents() ([]types.Student, error) {
+func (s *Sqlite) GetStudents(ctx context.Context) ([]types.Student, error) {
 	stmt, err := s.Db.Prepare("SELECT * FROM students")
 
 	if err != nil {
+		slog.Error("Error1")
 		return nil, err
 	}
 
 	defer stmt.Close()
 
-	rows, err := stmt.Query()
+	rows, err := stmt.QueryContext(ctx)
 
 	if err != nil {
 		return nil, err
@@ -113,14 +115,14 @@ func (s *Sqlite) GetStudents() ([]types.Student, error) {
 
 }
 
-func (s *Sqlite) DeleteStudentById(id int64) (string, error) {
+func (s *Sqlite) DeleteStudentById(ctx context.Context, id int64) (string, error) {
 	stmt, err := s.Db.Prepare("DELETE FROM students WHERE id = ?")
 	if err != nil {
 		return "error occurred", fmt.Errorf("failed to prepare delete: %w", err)
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(id)
+	result, err := stmt.Exec(ctx, id)
 
 	if err != nil {
 		return "error occurred", fmt.Errorf("failed to execute delete: %w", err)

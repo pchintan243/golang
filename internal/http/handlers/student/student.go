@@ -20,6 +20,9 @@ func New(storage storage.Storage) http.HandlerFunc {
 
 		var student types.Student
 
+		// Use the request context for DB operations
+		ctx := r.Context()
+
 		err := json.NewDecoder(r.Body).Decode(&student)
 		if errors.Is(err, io.EOF) {
 			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("empty body")))
@@ -38,7 +41,7 @@ func New(storage storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		lastId, err := storage.CreateStudent(student.Name, student.Email, student.Age)
+		lastId, err := storage.CreateStudent(ctx, student.Name, student.Email, student.Age)
 		slog.Info("user created successfully", slog.String("userId", fmt.Sprint(lastId)))
 
 		if err != nil {
@@ -54,13 +57,15 @@ func GetById(storage storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		slog.Info("Getting a student", slog.String("id", id))
+		// Use the request context for DB operations
+		ctx := r.Context()
 
 		intId, err := strconv.ParseInt(id, 10, 64)
 		if err != nil {
 			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
 			return
 		}
-		student, err := storage.GetStudentById(intId)
+		student, err := storage.GetStudentById(ctx, intId)
 
 		if err != nil {
 			slog.Error("error getting user", slog.String("id", id))
@@ -76,10 +81,12 @@ func GetById(storage storage.Storage) http.HandlerFunc {
 func GetList(storage storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("getting all students")
+		// Use the request context for DB operations
+		ctx := r.Context()
 
-		students, err := storage.GetStudents()
+		students, err := storage.GetStudents(ctx)
 		if err != nil {
-			response.WriteJson(w, http.StatusInternalServerError, err)
+			response.WriteJson(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -92,12 +99,15 @@ func DeleteById(storage storage.Storage) http.HandlerFunc {
 		id := r.PathValue("id")
 		slog.Info("Getting a student", slog.String("id", id))
 
+		// Use the request context for DB operations
+		ctx := r.Context()
+
 		intId, err := strconv.ParseInt(id, 10, 64)
 		if err != nil {
 			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
 			return
 		}
-		msg, err := storage.DeleteStudentById(intId)
+		msg, err := storage.DeleteStudentById(ctx, intId)
 
 		if err != nil {
 			slog.Error("error getting user", slog.String("id", id))
