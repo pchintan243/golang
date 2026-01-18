@@ -46,7 +46,7 @@ func (s *Sqlite) CreateStudent(ctx context.Context, name string, email string, a
 
 	defer stmt.Close()
 
-	result, err := stmt.Exec(ctx, name, email, age)
+	result, err := stmt.ExecContext(ctx, name, email, age)
 
 	if err != nil {
 		return 0, err
@@ -122,7 +122,7 @@ func (s *Sqlite) DeleteStudentById(ctx context.Context, id int64) (string, error
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(ctx, id)
+	result, err := stmt.ExecContext(ctx, id)
 
 	if err != nil {
 		return "error occurred", fmt.Errorf("failed to execute delete: %w", err)
